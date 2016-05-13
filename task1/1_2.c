@@ -13,6 +13,7 @@
 //Header file for wait calls
 #include<sys/wait.h>
 #define FORK_WAIT 250000
+#define CHILD_WAIT 500000
 
 int main(int argc, char* argv[]){
 	printf("Parent process started with pid: %d \n",getpid());
@@ -22,6 +23,10 @@ int main(int argc, char* argv[]){
 		return EXIT_FAILURE;
 	}
 	if (p_return_val == 0){// child process
+		if(usleep(CHILD_WAIT)!=0){
+			printf("usleep failed, error:%s\n",strerror(errno));
+			return EXIT_FAILURE;
+		}
 		printf("Child process: my pid is %d, parent pid is %d\n",
                getpid(), getppid());
 		return EXIT_SUCCESS;
