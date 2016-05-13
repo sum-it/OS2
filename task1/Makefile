@@ -1,9 +1,10 @@
 CC=gcc
 CFLAGS= --std=c99 -Wall -Werror -O1
-SOURCE= 1_2.c
+SOURCE= 1.c
 OUTFILE=prog
 SHFILE=test_script.sh
 count=5
+LOG_FILE=run.log
 
 all: exec
 
@@ -17,8 +18,8 @@ exec: prog
 #executes prog traget 5 times
 test:prog
 #use shell script to execute the target
-	./$(SHFILE) | tee -a run.log
+	./$(SHFILE) 2 | tee -a run.log
 
 .PHONY: clean
 clean:
-	rm -f $(OUTFILE)
+	rm -f $(OUTFILE) $(LOG_FILE)
