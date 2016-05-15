@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
 	pid_t p_return_val = fork();
 	if(usleep(FORK_WAIT)!=0){
 		printf("usleep failed, error:%s\n",strerror(errno));
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 	if (p_return_val == 0){// child process
 		if(usleep(CHILD_WAIT)!=0){
@@ -33,17 +33,15 @@ int main(int argc, char* argv[]){
                getpid(), getppid());
 		if(argc>1){
 //			printf("This thing will work for random failure\n");
-			int random_number;
 			srand(time(NULL)); //initialize random generator
-			random_number = rand();
-			if (random_number % 2 ==0){
-				return EXIT_SUCCESS;
+			if ((rand() % 100) < 50){
+				exit(EXIT_SUCCESS);
 			}
 			else{
-				return EXIT_FAILURE;
+				exit(EXIT_FAILURE);
 			}
 		}
-		return EXIT_SUCCESS;
+		exit(EXIT_SUCCESS);
 	}
 	else if (p_return_val > 0){ // parent process
 		printf("Parent process: Child created, my pid is:%d,\t"
@@ -60,37 +58,37 @@ int main(int argc, char* argv[]){
 				if(WEXITSTATUS(child_status)==0){
 					printf("Child terminated normally with exit status"
 					": %d\n",WEXITSTATUS(child_status));
-					return EXIT_SUCCESS;
+					exit(EXIT_SUCCESS);
 				}
 				else{
 					printf("Child terminated abnormally with exit status"
 					": %d\n",WEXITSTATUS(child_status));
-					return EXIT_FAILURE;
+					exit(EXIT_FAILURE);
 				}
 				
 			}
 			else{
 				printf("Child exited abnormally. Exit status:"
 					"%s\n",strerror(error_val));
-				return EXIT_FAILURE;
+				exit(EXIT_FAILURE);
 			}
 		}
 		else{
 			error_val=errno;
 			printf("waitpid call failed, error value:%s\n",
 					strerror(error_val));
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		}
-		return EXIT_SUCCESS;
+		exit(EXIT_SUCCESS);
 	}
 	else if (p_return_val < 0){
 		printf("fork creation failed with error: %s",strerror(errno));
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 	else{
 		printf("This should never reach since all cases are"
 				" covered by other if else branches");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
