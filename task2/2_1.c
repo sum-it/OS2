@@ -59,9 +59,9 @@ int backup(){
 		else if (ret > 0 ){ //parent process
 //			fprintf(stdout, "parent process continues\n");
 			while(ret == waitpid(ret,0,0)){
-				fprintf(stderr, "child dies, respawn\n");
+//				fprintf(stderr, "child dies, respawn\n");
 				if (restarts > fork_limit){
-					fprintf(stderr,"num_forks exceeded starting server");
+					fprintf(stderr,"num_forks exceeded using parent\n");
 					return restarts;
 				}
 			}

@@ -58,7 +58,7 @@ int backup(){
         }
 		else if (ret > 0 ){ //parent process
 //			fprintf(stdout, "parent process continues\n");
-			while(ret != waitpid(ret,0,0)){
+			while(ret == waitpid(ret,0,0)){
 				fprintf(stderr, "child dies, respawn\n");
 			}
 		}
