@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= --std=c99 -Wall -Werror -O1
-SOURCE= 2_2.c
+SOURCE= 2_3.c
 OUTFILE=prog
 SHFILE=test_script.sh
 COUNT=5

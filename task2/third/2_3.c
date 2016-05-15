@@ -101,7 +101,14 @@ void server(char * wd,int chances,int count){
 				}
 				if(strstr(dptr->d_name,"fail")!=NULL){ //case where file name has fail in it
 					srand(time(NULL));
-					if((rand() % 100) < chances ) { //probability matched
+					printf("%ld\n",time(NULL));
+					int randomness=(rand() %100);
+					if(randomness < chances ) { //probability matched
+						printf( "probability failure:%d\t%d\n",randomness,chances);
+						if(usleep(500000)!=0){ 
+						fprintf(stderr,"usleep failed, error:%s\n",strerror(errno)); 
+							exit(EXIT_FAILURE);
+						}
 						exit(EXIT_FAILURE);
 					}
 				}
