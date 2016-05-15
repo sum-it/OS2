@@ -11,7 +11,7 @@
 #include<dirent.h> //Header file for directory manipulations
 #define MAX_FORKS 10
 int backup();
-void server(char *);
+int server(char *);
 void wait_for_request(int);
 void process_request();
 int counter=0;
@@ -58,29 +58,49 @@ int main(int argc, char* argv[]){
 //	printf("current directory is set to %s \n",wd);
 	int ft = backup();
 // Do parent stuff. backup process has started already.
-	server(wd);
-	return EXIT_FAILURE;
+	int rs = server(wd);
+	if (rs ==EXIT_FAILURE) return EXIT_FAILURE;
 }
-void server(char * wd){
+int server(char * wd){
 	while(1){
 		DIR * dp = NULL;
 		struct dirent *dptr =NULL;
 		if ((dp = opendir(wd))==NULL){
-			fprintf(stderr,"directory opening error %s\n",strerror(errno));
+			fprintf(stderr,"directory opening error:%s: %s\n",wd,strerror(errno));
+			return EXIT_FAILURE;
 		}
+		char pd[1024];
+		if (getcwd(pd, sizeof(pd)) != NULL){} // save current directory 
+   		else{
+	       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
+			return EXIT_FAILURE;
+		}
+		chdir(wd);
 		while((dptr = readdir(dp))!=NULL){
 			if (dptr->d_type ==DT_REG){
 				//file we were looking for
 				//open it read it and delete and close it
-				
+				FILE *fp;
+				if((fp =fopen(dptr->d_name,"r"))==NULL){
+					fprintf(stderr, "File opening error: %s\n",strerror(errno));
+					return EXIT_FAILURE;
+				}
 				fprintf(stdout,"server%d processed:%s\t from %s\n",
 					getpid(),dptr->d_name,wd);
 				if(usleep(500000)!=0){ 
-					printf("usleep failed, error:%s\n",strerror(errno)); 
+					fprintf(stderr,"usleep failed, error:%s\n",strerror(errno)); 
 					exit(-1); 
+				}
+				if (fclose(fp)!=0){
+					fprintf(stderr,"File Closing error: %s\n",strerror(errno));
+				}
+				if (unlink(dptr->d_name)== -1){
+					fprintf(stderr,"File deletion error: %s\n",strerror(errno));
 				}
 			}
 		}
+		chdir(pd); //move back to previous directory
+		closedir(dp);
 	}
 }
 int backup(){
