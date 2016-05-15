@@ -18,7 +18,7 @@ exec: prog
 #executes prog traget 5 times
 test:prog
 #use shell script to execute the target
-	./$(SHFILE) 2 | tee -a run.log
+	./$(SHFILE) -n 5 | tee -a run.log
 
 .PHONY: clean
 clean:

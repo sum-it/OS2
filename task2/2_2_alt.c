@@ -11,7 +11,7 @@
 #include<dirent.h> //Header file for directory manipulations
 #define MAX_FORKS 10
 int backup();
-void server(char *);
+int server(char *);
 void wait_for_request(int);
 void process_request();
 int counter=0;
@@ -58,21 +58,22 @@ int main(int argc, char* argv[]){
 //	printf("current directory is set to %s \n",wd);
 	int ft = backup();
 // Do parent stuff. backup process has started already.
-	server(wd);
+	int rs = server(wd);
+	if (rs ==EXIT_FAILURE) return EXIT_FAILURE;
 }
-void server(char * wd){
+int server(char * wd){
 	while(1){
 		DIR * dp = NULL;
 		struct dirent *dptr =NULL;
 		if ((dp = opendir(wd))==NULL){
 			fprintf(stderr,"directory opening error:%s: %s\n",wd,strerror(errno));
-			exit(EXIT_FAILURE); 
+			return EXIT_FAILURE;
 		}
 		char pd[1024];
 		if (getcwd(pd, sizeof(pd)) != NULL){} // save current directory 
    		else{
-	       	fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
-			exit(EXIT_FAILURE); 
+	       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
+			return EXIT_FAILURE;
 		}
 		chdir(wd);
 		while((dptr = readdir(dp))!=NULL){
@@ -82,13 +83,13 @@ void server(char * wd){
 				FILE *fp;
 				if((fp =fopen(dptr->d_name,"r"))==NULL){
 					fprintf(stderr, "File opening error: %s\n",strerror(errno));
-					exit(EXIT_FAILURE); 
+					return EXIT_FAILURE;
 				}
 				fprintf(stdout,"server%d processed:%s\t from %s\n",
 					getpid(),dptr->d_name,wd);
 				if(usleep(500000)!=0){ 
 					fprintf(stderr,"usleep failed, error:%s\n",strerror(errno)); 
-					exit(EXIT_FAILURE); 
+					exit(-1); 
 				}
 				if (fclose(fp)!=0){
 					fprintf(stderr,"File Closing error: %s\n",strerror(errno));
@@ -103,7 +104,7 @@ void server(char * wd){
 	}
 }
 int backup(){
-	int ret, restarts = 1;
+	int ret, restarts = 0;
 	for(;;restarts++){
         ret = fork();
         if (ret == 0){ // child process
@@ -113,15 +114,15 @@ int backup(){
         }
 		else if (ret > 0 ){ //parent process
 			fprintf(stdout, "parent process continues\n");
-			while(ret == waitpid(ret,0,0)){
+			while(ret != waitpid(ret,0,0)){
 				fprintf(stderr, "child dies, respawn\n");
-				if (restarts > fork_limit){
-					fprintf(stderr,"num_forks exceeded: using parent process \n");
-					return restarts;
-				}
 			}
 		}
 		else {
+			if (restarts > fork_limit){
+				fprintf(stderr,"Fork failed and num_forks exceeded: %d error: , %s\n",restarts,strerror(errno));
+				return restarts;
+			}
 			fprintf(stderr,"Fork failed retrying, %s\n",strerror(errno));
 		}
 	}
@@ -129,14 +130,14 @@ int backup(){
 void wait_for_request(int ft){
 	if(usleep(1000000)!=0){ 
 		printf("usleep failed, error:%s\n",strerror(errno)); 
-		exit(EXIT_FAILURE); 
+		exit(-1); 
 	}
 	fprintf(stdout,"request %d found, process count is: %d\n",counter,ft);
 }
 void process_request(){
 	if(usleep(1000000)!=0){ 
 		printf("usleep failed, error:%s\n",strerror(errno)); 
-		exit(EXIT_FAILURE); 
+		exit(-1); 
 	}
 	fprintf(stdout,"request %d processed\n",counter++);
 }
