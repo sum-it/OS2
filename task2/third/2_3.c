@@ -1,0 +1,153 @@
+#define _BSD_SOURCE // used for usleep function
+#include<stdio.h> //Standard input output header file
+#include<sys/types.h> //Header file for process creation, identifications and types.
+#include<unistd.h> //Header file for getopt processing
+#include<stdlib.h> //Header file for process terminations
+#include<errno.h> //Header file for error number
+#include<string.h> //Header file for string processing
+#include<sys/wait.h> //Header file for wait calls
+#include<time.h> //Header file for random seed 
+#include<inttypes.h> //Header file for integer conversion 
+#include<dirent.h> //Header file for directory manipulations
+#define MAX_FORKS 10
+int backup();
+void server(char *,int,int);
+int counter=0;
+int fork_limit=MAX_FORKS;
+int main(int argc, char* argv[]){
+	printf("Parent process started with pid: %d \n",getpid());
+	int ch;
+	int chances=50;
+	char wd[1024];
+	if (getcwd(wd, sizeof(wd)) != NULL){} // default directory set to current directory
+   	else{
+       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
+		return EXIT_FAILURE;
+	}
+	char *cvalue = NULL;
+	while ((ch =getopt(argc,argv, "d:n:f:")) != -1){
+		switch (ch){
+			case 'n':
+				cvalue=optarg;
+				fork_limit= strtoimax(cvalue,NULL,10);
+//				printf("fork limit is set to %d\n",fork_limit);
+				if(fork_limit ==UINTMAX_MAX && errno ==ERANGE){
+					fprintf(stderr,"wrong optional argument, error in conversion: %s\n",
+						strerror(errno));
+					return EXIT_FAILURE;
+				}
+				if (fork_limit<1 || fork_limit > 50){
+					fprintf(stderr,"valid range for -n is 1-50\n");
+					return EXIT_FAILURE;
+				}
+				break;
+			case 'f':
+				cvalue=optarg;
+				chances= strtoimax(cvalue,NULL,10);
+//				printf("chances is set to %d\n",chances);
+				if(chances ==UINTMAX_MAX && errno ==ERANGE){
+					fprintf(stderr,"wrong optional argument, error in conversion: %s\n",
+						strerror(errno));
+					return EXIT_FAILURE;
+				}
+				if (chances < 1 || chances > 100){
+					fprintf(stderr,"valid range for -f is 1-100\n");
+					return EXIT_FAILURE;
+				}
+				break;
+			case 'd':
+				cvalue=optarg;
+				strcpy(wd,optarg);
+				printf("current directory is set to %s\t%s \n",wd,optarg);
+				break;
+			case ':':
+				fprintf(stderr,"Option -%c requires an operand\n",optopt);
+				return EXIT_FAILURE;
+			case '?':
+				fprintf(stderr,"Unrecognised option: -%c\n",optopt);
+				return EXIT_FAILURE;
+		}
+	}
+//	printf("current directory is set to %s \n",wd);
+	int count = backup();
+// Do parent stuff. backup process has started already.
+	server(wd,chances,count);
+}
+void server(char * wd,int chances,int count){
+	while(1){
+		DIR * dp = NULL;
+		struct dirent *dptr =NULL;
+		if ((dp = opendir(wd))==NULL){
+			fprintf(stderr,"directory opening error:%s: %s\n",wd,strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		char pd[1024];
+		if (getcwd(pd, sizeof(pd)) != NULL){} // save current directory 
+   		else{
+	       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		if (chdir(wd)== -1){
+            fprintf(stderr,"change directory error : %s\n",strerror(errno));
+        }
+		while((dptr = readdir(dp))!=NULL){
+			if (dptr->d_type ==DT_REG){
+				//file we were looking for
+				//open it read it and delete and close it
+				FILE *fp;
+				if((fp =fopen(dptr->d_name,"r"))==NULL){
+					fprintf(stderr, "File opening error: %s\n",strerror(errno));
+					exit(EXIT_FAILURE);
+				}
+				if(strstr(dptr->d_name,"fail")!=NULL){ //case where file name has fail in it
+					srand(time(NULL));
+					if((rand() % 100) < chances ) { //probability matched
+						exit(EXIT_FAILURE);
+					}
+				}
+				fprintf(stdout,"server:%d\t count:%d\t processed:%s\t from %s\n",
+					getpid(),count,dptr->d_name,wd);
+				if(usleep(500000)!=0){ 
+					fprintf(stderr,"usleep failed, error:%s\n",strerror(errno)); 
+					exit(EXIT_FAILURE);
+				}
+				if (fclose(fp)!=0){
+					fprintf(stderr,"File Closing error: %s\n",strerror(errno));
+					exit(EXIT_FAILURE);
+				}
+				if (unlink(dptr->d_name)== -1){
+					fprintf(stderr,"File deletion error: %s\n",strerror(errno));
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+		if (chdir(pd)== -1){ //change back to previous directory
+            fprintf(stderr,"change directory error : %s\n",strerror(errno));
+        }
+		closedir(dp);
+	}
+}
+int backup(){
+	int ret, restarts = 0;
+	for(;;restarts++){
+		if (restarts > fork_limit){
+			fprintf(stderr,"num_forks exceeded: %d \n",restarts);
+			return restarts;
+		}
+        ret = fork();
+        if (ret == 0){ // child process
+            printf("Child process: my pid is %d, parent pid is %d\n",
+               getpid(), getppid());
+			return restarts;
+        }
+		else if (ret > 0 ){ //parent process
+			fprintf(stdout, "parent process continues\n");
+			while(ret == waitpid(ret,0,0)){
+				fprintf(stderr, "child dies, respawn\n");
+			}
+		}
+		else {
+			fprintf(stderr,"Fork failed retrying, %s\n",strerror(errno));
+		}
+	}
+}
