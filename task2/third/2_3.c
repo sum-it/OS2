@@ -101,7 +101,7 @@ void server(char * wd,int chances,int count){
 				}
 				if(strstr(dptr->d_name,"fail")!=NULL){ //case where file name has fail in it
 					srand(time(NULL));
-					printf("%ld\n",time(NULL));
+//					printf("%ld\n",time(NULL));
 					int randomness=(rand() %100);
 					if(randomness < chances ) { //probability matched
 						printf( "probability failure:%d\t%d\n",randomness,chances);
