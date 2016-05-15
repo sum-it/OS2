@@ -1,53 +1,42 @@
-./prog -n 3 -d x
-Parent process started with pid: 18411 
+ ./prog -n 5 -d x
+Parent process started with pid: 18476 
 current directory is set to x	x 
 parent process continues
-Child process: my pid is 18412, parent pid is 18411
-1463345040
-probability failure:2	50
+Child process: my pid is 18477, parent pid is 18476
+server:18477	 count:0	 processed:20fail.txt	 from x
+server:18477	 count:0	 processed:68.txt	 from x
+server:18477	 count:0	 processed:24fail.txt	 from x
+server:18477	 count:0	 processed:52fail.txt	 from x
+server:18477	 count:0	 processed:28fail.txt	 from x
+server:18477	 count:0	 processed:11fail.txt	 from x
+server:18477	 count:0	 processed:57.txt	 from x
+server:18477	 count:0	 processed:72fail.txt	 from x
+server:18477	 count:0	 processed:45fail.txt	 from x
+server:18477	 count:0	 processed:19.txt	 from x
+probability failure:23	50
 child dies, respawn
 parent process continues
-Child process: my pid is 18413, parent pid is 18411
-1463345040
-probability failure:2	50
+Child process: my pid is 18478, parent pid is 18476
+probability failure:23	50
 child dies, respawn
 parent process continues
-Child process: my pid is 18414, parent pid is 18411
-1463345041
-server:18414	 count:2	 processed:30fail.txt	 from x
-server:18414	 count:2	 processed:95.txt	 from x
-1463345042
-probability failure:6	50
+Child process: my pid is 18479, parent pid is 18476
+probability failure:10	50
 child dies, respawn
 parent process continues
-Child process: my pid is 18415, parent pid is 18411
-1463345042
-probability failure:6	50
+Child process: my pid is 18480, parent pid is 18476
+probability failure:10	50
 child dies, respawn
-num_forks exceeded: 4 
-1463345043
-server:18411	 count:4	 processed:81fail.txt	 from x
-1463345043
-server:18411	 count:4	 processed:49fail.txt	 from x
-1463345044
-server:18411	 count:4	 processed:34fail.txt	 from x
-1463345044
-server:18411	 count:4	 processed:51fail.txt	 from x
-server:18411	 count:4	 processed:29.txt	 from x
-1463345045
-server:18411	 count:4	 processed:50fail.txt	 from x
-server:18411	 count:4	 processed:51.txt	 from x
-1463345046
-server:18411	 count:4	 processed:76fail.txt	 from x
-server:18411	 count:4	 processed:72.txt	 from x
-server:18411	 count:4	 processed:59.txt	 from x
-1463345048
-server:18411	 count:4	 processed:3fail.txt	 from x
-server:18411	 count:4	 processed:16.txt	 from x
-1463345049
-server:18411	 count:4	 processed:87fail.txt	 from x
-1463345049
-server:18411	 count:4	 processed:10fail.txt	 from x
-1463345050
-probability failure:11	50
+parent process continues
+Child process: my pid is 18481, parent pid is 18476
+server:18481	 count:4	 processed:61fail.txt	 from x
+server:18481	 count:4	 processed:30.txt	 from x
+probability failure:25	50
+child dies, respawn
+parent process continues
+Child process: my pid is 18482, parent pid is 18476
+probability failure:25	50
+child dies, respawn
+num_forks exceeded: 6 
+probability failure:17	50
 
