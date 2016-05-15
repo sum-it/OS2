@@ -1,0 +1,66 @@
+Parent process started with pid: 18049 
+server 18050	 restart:1
+Parent process started with pid: 18049 
+server 18051	 restart:2
+Parent process started with pid: 18049 
+server 18052	 restart:3
+Parent process started with pid: 18049 
+server 18053	 restart:4
+Parent process started with pid: 18049 
+server 18054	 restart:5
+num_forks exceeded using parent
+Parent process started with pid: 18049 
+server 18049	 restart:5
+Parent process started with pid: 18057 
+server 18058	 restart:1
+Parent process started with pid: 18057 
+server 18059	 restart:2
+Parent process started with pid: 18057 
+server 18060	 restart:3
+Parent process started with pid: 18057 
+server 18061	 restart:4
+Parent process started with pid: 18057 
+server 18062	 restart:5
+num_forks exceeded using parent
+Parent process started with pid: 18057 
+server 18057	 restart:5
+Parent process started with pid: 18065 
+server 18066	 restart:1
+Parent process started with pid: 18065 
+server 18067	 restart:2
+Parent process started with pid: 18065 
+server 18068	 restart:3
+Parent process started with pid: 18065 
+server 18069	 restart:4
+Parent process started with pid: 18065 
+server 18070	 restart:5
+num_forks exceeded using parent
+Parent process started with pid: 18065 
+server 18065	 restart:5
+Parent process started with pid: 18073 
+server 18074	 restart:1
+Parent process started with pid: 18073 
+server 18075	 restart:2
+Parent process started with pid: 18073 
+server 18076	 restart:3
+Parent process started with pid: 18073 
+server 18077	 restart:4
+Parent process started with pid: 18073 
+server 18078	 restart:5
+num_forks exceeded using parent
+Parent process started with pid: 18073 
+server 18073	 restart:5
+Parent process started with pid: 18081 
+server 18082	 restart:1
+Parent process started with pid: 18081 
+server 18083	 restart:2
+Parent process started with pid: 18081 
+server 18084	 restart:3
+Parent process started with pid: 18081 
+server 18085	 restart:4
+Parent process started with pid: 18081 
+server 18087	 restart:5
+num_forks exceeded using parent
+Parent process started with pid: 18081 
+server 18081	 restart:5
+Succeeded 5 times and Failed 0 times
