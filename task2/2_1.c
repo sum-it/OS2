@@ -36,10 +36,10 @@ int main(int argc, char* argv[]){
 				break;
 			case ':':
 				fprintf(stderr,"Option -%c requires an operand\n",optopt);
-				return EXIT_FAILURE;
+				exit(EXIT_FAILURE);
 			case '?':
 				fprintf(stderr,"Unrecognised option: -%c\n",optopt);
-				return EXIT_FAILURE;
+				exit(EXIT_FAILURE);
 		}
 	}
 	int ft = backup();
@@ -60,7 +60,7 @@ int backup(){
 //			fprintf(stdout, "parent process continues\n");
 			while(ret == waitpid(ret,0,0)){
 //				fprintf(stderr, "child dies, respawn\n");
-				if (restarts > fork_limit){
+				if (restarts >= fork_limit){
 					fprintf(stderr,"num_forks exceeded using parent\n");
 					return restarts;
 				}
