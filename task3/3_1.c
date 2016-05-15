@@ -12,16 +12,18 @@
 #define MAX_FORKS 10
 int backup(void);
 void backup_terminated(void);
-int server(char *,int);
-void wait_for_request(int);
-void process_request(void);
+int server(char *,int,int);
 int counter=0;
 int fd[2];
+int restarts=0;
 char buf;
 int fork_limit=MAX_FORKS;
-char **arguments;
+char arguments[10][20];
 int main(int argc, char* argv[]){
-	arguments=argv;
+	for(int i=1;i<argc;i++){
+		strcpy(arguments[i],argv[i]);
+		printf("%s\n",arguments[i]);
+	}
 	printf("Parent process started with pid: %d \n",getpid());
 	int ch;
 	int chances=50;
@@ -76,22 +78,22 @@ int main(int argc, char* argv[]){
 		}
 	}
 //	printf("current directory is set to %s \n",wd);
-	int ft = backup();
+	int count = backup();
 // Do parent stuff. backup process has started already.
-	int rs = server(wd,chances);
+	int rs = server(wd,chances,count);
 	if (rs ==EXIT_FAILURE) exit(EXIT_FAILURE);
 }
 void backup_terminated(void){
 	close(fd[0]); //child should close read end
 	if((write(fd[1],"x",1))== -1){ //we couldn't write a character on the pipe	
 		fprintf(stderr,"pipe not ready:%s\n",strerror(errno));	
-		if(execv(arguments[0],arguments)){
-			fprintf(stderr,"execv failed:%s\n",strerror(errno));
-			exit(EXIT_FAILURE);
-		}
+	//	if(execv(arguments[0],arguments)){
+	//		fprintf(stderr,"execv failed:%s\n",strerror(errno));
+	//		exit(EXIT_FAILURE);
+	//	}
 	}
 }
-int server(char * wd,int chances){
+int server(char * wd,int chances,int count ){
 	while(1){
 		DIR * dp = NULL;
 		struct dirent *dptr =NULL;
@@ -105,7 +107,9 @@ int server(char * wd,int chances){
 	       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
 			return EXIT_FAILURE;
 		}
-		chdir(wd);
+  		if (chdir(wd)== -1){
+            fprintf(stderr,"change directory error : %s\n",strerror(errno));
+        }
 		while((dptr = readdir(dp))!=NULL){
 			if (dptr->d_type ==DT_REG){
 				backup_terminated();
@@ -122,9 +126,9 @@ int server(char * wd,int chances){
 						exit(EXIT_FAILURE);
 					}
 				}
-				fprintf(stdout,"server%d processed:%s\t from %s\n",
-					getpid(),dptr->d_name,wd);
-				if(usleep(500000)!=0){ 
+				fprintf(stdout,"server:%d count:%d processed:%s\t from %s\n",
+					getpid(),count,dptr->d_name,wd);
+				if(usleep(5000000)!=0){ 
 					fprintf(stderr,"usleep failed, error:%s\n",strerror(errno)); 
 					exit(-1); 
 				}
@@ -136,17 +140,24 @@ int server(char * wd,int chances){
 				}
 			}
 		}
-		chdir(pd); //move back to previous directory
+	 	if (chdir(pd)== -1){
+            fprintf(stderr,"change directory error : %s\n",strerror(errno));
+        }
+
 		closedir(dp);
 	}
 }
 int backup(){
-	int ret, restarts = 0;
+	int ret;
 	if(pipe(fd) == -1){
 		fprintf(stderr,"Pipe creation failed:%s",strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	for(;;restarts++){
+		if (restarts > fork_limit){
+			printf("num_forks exceeded: %d ",restarts);
+			return restarts;
+		}
         ret = fork();
         if (ret == 0){ // child process
             printf("Child process: my pid is %d, parent pid is %d\n",
@@ -162,25 +173,7 @@ int backup(){
 			}
 		}
 		else {
-			if (restarts > fork_limit){
-				fprintf(stderr,"Fork failed and num_forks exceeded: %d error: , %s\n",restarts,strerror(errno));
-				return restarts;
-			}
 			fprintf(stderr,"Fork failed retrying, %s\n",strerror(errno));
 		}
 	}
-}
-void wait_for_request(int ft){
-	if(usleep(1000000)!=0){ 
-		printf("usleep failed, error:%s\n",strerror(errno)); 
-		exit(-1); 
-	}
-	fprintf(stdout,"request %d found, process count is: %d\n",counter,ft);
-}
-void process_request(){
-	if(usleep(1000000)!=0){ 
-		printf("usleep failed, error:%s\n",strerror(errno)); 
-		exit(-1); 
-	}
-	fprintf(stdout,"request %d processed\n",counter++);
 }
