@@ -27,11 +27,11 @@ int main(int argc, char* argv[]){
 				if(fork_limit ==UINTMAX_MAX && errno ==ERANGE){
 					fprintf(stderr,"wrong optional argument, error in conversion: %s\n",
 						strerror(errno));
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				if (fork_limit<1 || fork_limit > 50){
 					fprintf(stderr,"valid range for -n is 1-50\n");
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				break;
 			case ':':
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
 	return EXIT_SUCCESS;
 }
 int backup(){
-	int ret, restarts = 1;
+	int ret, restarts = 0;
 	for(;;restarts++){
         ret = fork();
         if (ret == 0){ // child process
@@ -58,15 +58,15 @@ int backup(){
         }
 		else if (ret > 0 ){ //parent process
 //			fprintf(stdout, "parent process continues\n");
-			while(ret == waitpid(ret,0,0)){
+			while(ret != waitpid(ret,0,0)){
 				fprintf(stderr, "child dies, respawn\n");
-				if (restarts > fork_limit){
-					fprintf(stderr,"num_forks exceeded starting server");
-					return restarts;
-				}
 			}
 		}
 		else {
+			if (restarts > fork_limit){
+				fprintf(stderr,"Fork failed and num_forks exceeded: %d error: , %s\n",restarts,strerror(errno));
+				return restarts;
+			}
 			fprintf(stderr,"Fork failed retrying, %s\n",strerror(errno));
 		}
 	}
