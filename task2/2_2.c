@@ -8,8 +8,10 @@
 #include<sys/wait.h> //Header file for wait calls
 #include<time.h> //Header file for random seed 
 #include<inttypes.h> //Header file for integer conversion 
-#define MAX_FORKS 5
+#include<dirent.h> //Header file for directory manipulations
+#define MAX_FORKS 10
 int backup();
+void server(char *);
 void wait_for_request(int);
 void process_request();
 int counter=0;
@@ -17,12 +19,18 @@ int fork_limit=MAX_FORKS;
 int main(int argc, char* argv[]){
 	printf("Parent process started with pid: %d \n",getpid());
 	int ch;
+	char wd[1024];
+	if (getcwd(wd, sizeof(wd)) != NULL){} // default directory set to current directory
+   	else{
+       fprintf(stderr,"getcwd() error: %s\n",strerror(errno));
+		return EXIT_FAILURE;
+	}
 	char *cvalue = NULL;
-	while ((ch =getopt(argc,argv, "n:")) != -1){
+	while ((ch =getopt(argc,argv, "d:n:")) != -1){
 		switch (ch){
 			case 'n':
 				cvalue=optarg;
-			fork_limit= strtoimax(cvalue,NULL,10);
+				fork_limit= strtoimax(cvalue,NULL,10);
 //				printf("fork limit is set to %d\n",fork_limit);
 				if(fork_limit ==UINTMAX_MAX && errno ==ERANGE){
 					fprintf(stderr,"wrong optional argument, error in conversion: %s\n",
@@ -34,6 +42,11 @@ int main(int argc, char* argv[]){
 					return EXIT_FAILURE;
 				}
 				break;
+			case 'd':
+				cvalue=optarg;
+				strcpy(wd,optarg);
+				printf("current directory is set to %s\t%s \n",wd,optarg);
+				break;
 			case ':':
 				fprintf(stderr,"Option -%c requires an operand\n",optopt);
 				return EXIT_FAILURE;
@@ -42,22 +55,45 @@ int main(int argc, char* argv[]){
 				return EXIT_FAILURE;
 		}
 	}
+//	printf("current directory is set to %s \n",wd);
 	int ft = backup();
 // Do parent stuff. backup process has started already.
-	fprintf(stdout,"server %d\t restart:%d\n",getpid(),ft);
-	return EXIT_SUCCESS;
+	server(wd);
+	return EXIT_FAILURE;
+}
+void server(char * wd){
+	while(1){
+		DIR * dp = NULL;
+		struct dirent *dptr =NULL;
+		if ((dp = opendir(wd))==NULL){
+			fprintf(stderr,"directory opening error %s\n",strerror(errno));
+		}
+		while((dptr = readdir(dp))!=NULL){
+			if (dptr->d_type ==DT_REG){
+				//file we were looking for
+				//open it read it and delete and close it
+				
+				fprintf(stdout,"server%d processed:%s\t from %s\n",
+					getpid(),dptr->d_name,wd);
+				if(usleep(500000)!=0){ 
+					printf("usleep failed, error:%s\n",strerror(errno)); 
+					exit(-1); 
+				}
+			}
+		}
+	}
 }
 int backup(){
 	int ret, restarts = 0;
 	for(;;restarts++){
         ret = fork();
         if (ret == 0){ // child process
-//            printf("Child process: my pid is %d, parent pid is %d\n",
-//              getpid(), getppid());
+            printf("Child process: my pid is %d, parent pid is %d\n",
+               getpid(), getppid());
 			return restarts;
         }
 		else if (ret > 0 ){ //parent process
-//			fprintf(stdout, "parent process continues\n");
+			fprintf(stdout, "parent process continues\n");
 			while(ret != waitpid(ret,0,0)){
 				fprintf(stderr, "child dies, respawn\n");
 			}
