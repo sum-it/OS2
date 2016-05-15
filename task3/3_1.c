@@ -10,13 +10,18 @@
 #include<inttypes.h> //Header file for integer conversion 
 #include<dirent.h> //Header file for directory manipulations
 #define MAX_FORKS 10
-int backup();
+int backup(void);
+void backup_terminated(void);
 int server(char *,int);
 void wait_for_request(int);
-void process_request();
+void process_request(void);
 int counter=0;
+int fd[2];
+char buf;
 int fork_limit=MAX_FORKS;
+char **arguments;
 int main(int argc, char* argv[]){
+	arguments=argv;
 	printf("Parent process started with pid: %d \n",getpid());
 	int ch;
 	int chances=50;
@@ -74,7 +79,17 @@ int main(int argc, char* argv[]){
 	int ft = backup();
 // Do parent stuff. backup process has started already.
 	int rs = server(wd,chances);
-	if (rs ==EXIT_FAILURE) return EXIT_FAILURE;
+	if (rs ==EXIT_FAILURE) exit(EXIT_FAILURE);
+}
+void backup_terminated(void){
+	close(fd[0]); //child should close read end
+	if((write(fd[1],"x",1))== -1){ //we couldn't write a character on the pipe	
+		fprintf(stderr,"pipe not ready:%s\n",strerror(errno));	
+		if(execv(arguments[0],arguments)){
+			fprintf(stderr,"execv failed:%s\n",strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+	}
 }
 int server(char * wd,int chances){
 	while(1){
@@ -93,6 +108,7 @@ int server(char * wd,int chances){
 		chdir(wd);
 		while((dptr = readdir(dp))!=NULL){
 			if (dptr->d_type ==DT_REG){
+				backup_terminated();
 				//file we were looking for
 				//open it read it and delete and close it
 				FILE *fp;
@@ -126,6 +142,10 @@ int server(char * wd,int chances){
 }
 int backup(){
 	int ret, restarts = 0;
+	if(pipe(fd) == -1){
+		fprintf(stderr,"Pipe creation failed:%s",strerror(errno));
+		exit(EXIT_FAILURE);
+	}
 	for(;;restarts++){
         ret = fork();
         if (ret == 0){ // child process
@@ -135,6 +155,8 @@ int backup(){
         }
 		else if (ret > 0 ){ //parent process
 			fprintf(stdout, "parent process continues\n");
+			close(fd[1]); //close write end in parent
+//			read(fd[0], &buf,1);
 			while(ret != waitpid(ret,0,0)){
 				fprintf(stderr, "child dies, respawn\n");
 			}
