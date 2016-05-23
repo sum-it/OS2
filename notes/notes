@@ -1,0 +1,15 @@
+Megapipi: New API, a channel per core birdirectional pipe between kernel and user space used to exchange asynchronous I/O request and completion event notification. 
+Three main concepts: paritioning, lightweight socket and batching.
+tested: memcached and nginx.
+Performance: 8-core 64B msg. 29% improvement over linux(for long connection and 582% for short connections. memchaced improavement - 15-320%. nginx - 75% improvement.
+
+Problem: existing APIs inefficient for message-oriented workload. (short connections or small messages). 
+existing api innovated on i) internal implementation but API is untouched.
+ii) added new API to complement existing API.
+//Problem is original network API wasn't designed to keep in mind concurrency. To deal with concurrency now several abstractions are to be kept in mind.
+Partitioned listening sockets: clones socket across cores and partition associated queue acroos cores. 
+lightweight socket: not wrapped in file related data structures and hence free from systemwide synchronization.
+system call batching: system call overheads are amortized over batched async I/O calls and completion notifications.
+
+motivation: 
+
