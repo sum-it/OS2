@@ -8,7 +8,6 @@
 
 #define fork_limit 1000
 
-char arguments[10][20];
 int pipefd[2];
 int backup(void);
 void server(int,char **,int );
@@ -16,15 +15,10 @@ void server(int,char **,int );
 int main(int argc, char *argv[]) {
 	pid_t cpid;
 	char buf;
-//		signal(SIGPIPE, SIG_IGN);
 
-	if (argc != 4) {
+	if (argc != 2) {
 		fprintf(stderr, "Usage: %s <string>\n", argv[0]);
 		exit(EXIT_FAILURE);
-	}
-	for (int i=0;i<argc; i++){
-		strcpy(arguments[i],argv[i]);	
-		printf("%s\n",arguments[i]);
 	}
 
 	int count = backup();
@@ -37,10 +31,10 @@ int backup(){
             fprintf(stderr,"num_forks exceeded: %d \n",restarts);
             return restarts;
         }
-	if (pipe(pipefd) == -1) {
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	}
+		if (pipe(pipefd) == -1) {
+			perror("pipe creation failed\n");
+			exit(EXIT_FAILURE);
+		}
         ret = fork();
         if (ret == 0){ // child process
             printf("Child process: my pid is %d, parent pid is %d\n",
@@ -49,7 +43,7 @@ int backup(){
         }
         else if (ret > 0 ){ //parent process
 			close(pipefd[1]);  /* Close unused write end */
-            fprintf(stdout, "parent process continues\n");
+//            fprintf(stdout, "parent process continues\n");
             while(ret == waitpid(ret,0,0))
                 fprintf(stderr, "child dies, respawn\n");
 		}
@@ -64,12 +58,9 @@ void server (int argc, char ** argv, int count){ //child process
 		signal(SIGPIPE, SIG_IGN);
 		int x=	write(pipefd[1], argv, sizeof(argv));
 			if(x==-1){
-				fprintf(stderr,"we couldn't write:%s\n",strerror(errno));
-				if(execv(arguments[0],argv)){
+				fprintf(stderr,"write error:%s\n",strerror(errno));
+				if(execv(argv[0],argv)){
 					fprintf(stderr,"execv failed:\t%s\n",strerror(errno));
-				}
-				else{
-					fprintf(stderr,"this shouldn't be executed since this is after execve");	
 				}
 			}
 			if(usleep(500000)!=0){ 
