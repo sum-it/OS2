@@ -26,10 +26,6 @@ int main(int argc, char *argv[]) {
 		strcpy(arguments[i],argv[i]);	
 		printf("%s\n",arguments[i]);
 	}
-	if (pipe(pipefd) == -1) {
-		perror("pipe");
-		exit(EXIT_FAILURE);
-	}
 
 	int count = backup();
 	server(argc,argv,count);
@@ -41,6 +37,10 @@ int backup(){
             fprintf(stderr,"num_forks exceeded: %d \n",restarts);
             return restarts;
         }
+	if (pipe(pipefd) == -1) {
+		perror("pipe");
+		exit(EXIT_FAILURE);
+	}
         ret = fork();
         if (ret == 0){ // child process
             printf("Child process: my pid is %d, parent pid is %d\n",
