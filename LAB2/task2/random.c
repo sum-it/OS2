@@ -36,7 +36,7 @@ int main(int argc,char * argv[]){
 			if (strcmp("0\n",buffer)){
 //				printf("%s\n",buffer);
 				printf("Writing output to the file.. \n");
-				//TODO write to the file
+				//TODO write to the file fsync and then clean shutdown FDs specially
 				for (int x=0;x<MAX_SIZE && (saver[x] != -1);x++){
 					printf("%d\n",saver[x]);
 				} 
