@@ -48,8 +48,20 @@ int backup(){
         else if (ret > 0 ){ //parent process
             close(pipefd[1]);  /* Close unused write end */
 //            fprintf(stdout, "parent process continues\n");
-            while(ret == waitpid(ret,0,0))
-                fprintf(stderr, "child dies, respawn\n");
+			int * returnstatus;
+            while(ret == waitpid(ret,returnstatus,0)){
+                fprintf(stderr, "child dies\n");
+				if (WIFEXITED(returnstatus)){ //child exited normly
+						printf("child exited with return %d\n",*returnstatus);
+					if(WEXITSTATUS(returnstatus)==0){
+						fprintf(stdout,
+							"child exited with return 0\n");
+						exit(EXIT_SUCCESS);
+					}
+					else continue;
+				}
+			}
+				
         }
         else {
             fprintf(stderr,"Fork failed retrying, %s\n",strerror(errno));       
